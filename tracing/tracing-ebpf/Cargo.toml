@@ -1,0 +1,17 @@
+[package]
+name = "tracing-ebpf"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+tracing-common = { path = "../tracing-common" }
+
+aya-ebpf = { workspace = true }
+aya-log-ebpf = { workspace = true }
+
+[build-dependencies]
+which = { workspace = true }
+
+[[bin]]
+name = "tracing"
+path = "src/main.rs"
