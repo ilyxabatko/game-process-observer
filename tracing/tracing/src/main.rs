@@ -1,7 +1,15 @@
-use aya::programs::KProbe;
+use aya::{
+    maps::{HashMap, ring_buf::RingBuf},
+    programs::TracePoint,
+};
+use log::info;
 #[rustfmt::skip]
 use log::{debug, warn};
-use tokio::signal;
+use tokio::{
+    signal,
+    time::{Duration, sleep},
+};
+use tracing_common::SysEnterEvent;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -41,14 +49,28 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    let program: &mut KProbe = ebpf.program_mut("tracing").unwrap().try_into()?;
+    let program: &mut TracePoint = ebpf.program_mut("sys_enter").unwrap().try_into()?;
     program.load()?;
-    program.attach("sys_enter", 0)?;
+    program.attach("raw_syscalls", "sys_enter")?;
 
-    let ctrl_c = signal::ctrl_c();
-    println!("Waiting for Ctrl-C...");
-    ctrl_c.await?;
-    println!("Exiting...");
+    let mut pid_allow: HashMap<_, u32, u8> = HashMap::try_from(ebpf.map_mut("PID_ALLOW").unwrap())?;
+    pid_allow.insert(std::process::id(), 1, 0)?;
 
+    let mut ring_buffer = RingBuf::try_from(ebpf.map_mut("EVENTS").unwrap()).unwrap();
+    // TODO: use async fd polling like here: https://github.com/zz85/profile-bee/blob/c311ffa6833ee408ee62cf75d23620480e0a97ee/profile-bee/bin/profile-bee.rs#L232-L260
+    loop {
+        tokio::select! {
+            _ = signal::ctrl_c() => {
+                println!("Exiting...");
+                break;
+            }
+            _ = sleep(Duration::from_millis(5)) => {
+               if let Some(item) = ring_buffer.next() {
+                    let event: &SysEnterEvent = unsafe { &*item.as_ptr().cast() };
+                    info!("event: {:?}", event);
+                }
+            }
+        }
+    }
     Ok(())
 }

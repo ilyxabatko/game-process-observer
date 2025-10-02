@@ -1,21 +1,8 @@
 #![no_std]
 #![no_main]
 
-use aya_ebpf::{macros::kprobe, programs::ProbeContext};
-use aya_log_ebpf::info;
-
-#[kprobe]
-pub fn tracing(ctx: ProbeContext) -> u32 {
-    match try_tracing(ctx) {
-        Ok(ret) => ret,
-        Err(ret) => ret,
-    }
-}
-
-fn try_tracing(ctx: ProbeContext) -> Result<u32, u32> {
-    info!(&ctx, "kprobe called");
-    Ok(0)
-}
+mod maps;
+mod syscalls;
 
 #[cfg(not(test))]
 #[panic_handler]
