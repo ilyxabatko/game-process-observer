@@ -11,6 +11,9 @@ use tokio::{
 };
 use tracing_common::SysEnterEvent;
 
+mod loader;
+mod util;
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::init();
@@ -68,9 +71,10 @@ async fn main() -> anyhow::Result<()> {
                if let Some(item) = ring_buffer.next() {
                     let event: &SysEnterEvent = unsafe { &*item.as_ptr().cast() };
                     info!("event: {:?}", event);
-                }
+               }
             }
         }
     }
+
     Ok(())
 }
