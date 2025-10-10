@@ -1,6 +1,6 @@
 use aya::{
+    Btf, include_bytes_aligned,
     maps::{HashMap, ring_buf::RingBuf},
-    programs::TracePoint,
 };
 use log::info;
 #[rustfmt::skip]
@@ -11,8 +11,16 @@ use tokio::{
 };
 use tracing_common::SysEnterEvent;
 
+use crate::loader::Programs;
+
 mod loader;
 mod util;
+
+/// Holds the binary data of all the eBPF programs
+const BPF_ELF: &[u8] = {
+    let bytes = include_bytes_aligned!("../../target/bpfel-unknown-none/debug/tracing");
+    bytes
+};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -52,14 +60,30 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    let program: &mut TracePoint = ebpf.program_mut("sys_enter").unwrap().try_into()?;
-    program.load()?;
-    program.attach("raw_syscalls", "sys_enter")?;
+    let programs = Programs::with_ebpf(&mut ebpf).with_elf_info(BPF_ELF)?;
+    let btf = Btf::from_sys_fs()?;
+
+    for (_, mut program) in programs.map {
+        if !program.enabled {
+            warn!("Program {} is disabled", &program.program_name);
+            continue;
+        }
+
+        info!(
+            "Loading and attaching: {}, {:?}",
+            &program.program_name,
+            program.program.prog_type()
+        );
+        program.load(&btf)?;
+        if let Err(error) = program.attach() {
+            debug!("Error attaching program {}: {error}", &program.program_name);
+        }
+    }
 
     let mut pid_allow: HashMap<_, u32, u8> = HashMap::try_from(ebpf.map_mut("PID_ALLOW").unwrap())?;
     pid_allow.insert(std::process::id(), 1, 0)?;
-
     let mut ring_buffer = RingBuf::try_from(ebpf.map_mut("EVENTS").unwrap()).unwrap();
+
     // TODO: use async fd polling like here: https://github.com/zz85/profile-bee/blob/c311ffa6833ee408ee62cf75d23620480e0a97ee/profile-bee/bin/profile-bee.rs#L232-L260
     loop {
         tokio::select! {

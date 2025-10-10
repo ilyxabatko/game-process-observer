@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use thiserror::Error;
 
 pub struct Programs<'a> {
-    map: HashMap<String, Program<'a>>,
+    pub map: HashMap<String, Program<'a>>,
 }
 
 impl<'a> Programs<'a> {
@@ -85,7 +85,7 @@ impl<'a> Program<'a> {
             program,
             attach_point: None,
             info: None,
-            enabled: false,
+            enabled: true, // TODO: toggle this through a CLI config
             loaded: false,
             attached: false,
             link_id: None,
