@@ -3,6 +3,7 @@
 #[repr(u16)]
 pub enum EventKind {
     SysEnter = 1,
+    SysMmap = 2,
 }
 
 #[repr(C)]
@@ -19,4 +20,22 @@ pub struct EventHeader {
 pub struct SysEnterEvent {
     pub header: EventHeader,
     pub id: u32, // syscall id
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct MmapArgs {
+    pub address: u64,
+    pub len: u64,
+    pub prot: u64,
+    pub flag: u64,
+    pub fd: u64,
+    pub offset: u64,
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct SysMmapEvent {
+    pub header: EventHeader,
+    pub args: MmapArgs,
 }

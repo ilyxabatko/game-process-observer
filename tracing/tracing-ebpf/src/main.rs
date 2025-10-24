@@ -2,6 +2,7 @@
 #![no_main]
 
 mod maps;
+mod mmap;
 mod syscalls;
 
 #[cfg(not(test))]

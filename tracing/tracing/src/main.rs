@@ -9,7 +9,7 @@ use tokio::{
     signal,
     time::{Duration, sleep},
 };
-use tracing_common::SysEnterEvent;
+use tracing_common::{EventHeader, EventKind, SysEnterEvent, SysMmapEvent};
 
 use crate::loader::Programs;
 
@@ -93,8 +93,23 @@ async fn main() -> anyhow::Result<()> {
             }
             _ = sleep(Duration::from_millis(5)) => {
                if let Some(item) = ring_buffer.next() {
-                    let event: &SysEnterEvent = unsafe { &*item.as_ptr().cast() };
-                    info!("event: {:?}", event);
+                   let ptr = item.as_ptr();
+                   let len = item.len();
+
+                   let header = unsafe { &*(ptr as *const EventHeader) };
+                   match header.kind {
+                       kind if kind == EventKind::SysEnter as u16 => {
+                            let event: &SysEnterEvent = unsafe { &*item.as_ptr().cast() };
+                            info!("SysEnter event: {:?}", &event);
+                       }
+                       kind if kind == EventKind::SysMmap as u16 => {
+                            let event: &SysMmapEvent = unsafe { &*item.as_ptr().cast() };
+                            info!("SysMmap Event: {:?}", &event);
+                       }
+                       other => {
+                           warn!("Unknown event kind: {} (len = {})", other, len);
+                       }
+                   }
                }
             }
         }
