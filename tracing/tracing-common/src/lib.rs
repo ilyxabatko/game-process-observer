@@ -4,6 +4,7 @@
 pub enum EventKind {
     SysEnter = 1,
     SysMmap = 2,
+    TcpConn = 3,
 }
 
 #[repr(C)]
@@ -38,4 +39,20 @@ pub struct MmapArgs {
 pub struct SysMmapEvent {
     pub header: EventHeader,
     pub args: MmapArgs,
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct TcpArgs {
+    pub source_address: u32,      // IPv4
+    pub destination_address: u32, // IPv4
+    pub source_port: u32,
+    pub destination_port: u32,
+}
+
+#[repr(C)]
+#[derive(Debug)]
+pub struct TcpConnEvent {
+    pub header: EventHeader,
+    pub args: TcpArgs,
 }

@@ -9,7 +9,7 @@ use tokio::{
     signal,
     time::{Duration, sleep},
 };
-use tracing_common::{EventHeader, EventKind, SysEnterEvent, SysMmapEvent};
+use tracing_common::{EventHeader, EventKind, SysEnterEvent, SysMmapEvent, TcpConnEvent};
 
 use crate::loader::Programs;
 
@@ -105,6 +105,10 @@ async fn main() -> anyhow::Result<()> {
                        kind if kind == EventKind::SysMmap as u16 => {
                             let event: &SysMmapEvent = unsafe { &*item.as_ptr().cast() };
                             info!("SysMmap Event: {:?}", &event);
+                       }
+                       kind if kind == EventKind::TcpConn as u16 => {
+                            let event: &TcpConnEvent = unsafe { &*item.as_ptr().cast() };
+                            info!("Tcp Connection (sys_connect exit) Event: {:?}", &event);
                        }
                        other => {
                            warn!("Unknown event kind: {} (len = {})", other, len);

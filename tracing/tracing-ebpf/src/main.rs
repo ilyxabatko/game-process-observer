@@ -3,6 +3,7 @@
 
 mod maps;
 mod mmap;
+mod sys_connect;
 mod syscalls;
 
 #[cfg(not(test))]

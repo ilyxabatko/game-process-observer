@@ -1,5 +1,7 @@
-use aya_ebpf::macros::map;
-use aya_ebpf::maps::{HashMap, RingBuf};
+use aya_ebpf::{
+    macros::map,
+    maps::{HashMap, RingBuf},
+};
 
 #[repr(C)]
 pub struct PidKey {
