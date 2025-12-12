@@ -1,9 +1,8 @@
 # Game Process Observer
-This is an **eBPF-based Process Observer** that passively monitors a target process (PID you control) to collect different trace data, process it and build baselines and surface anomalies (e.g. unusual syscalls, unexpected library calls, suspicious ptrace attempts, etc).
+This is an **eBPF-based Process Observer** that passively monitors a target process (PID you control) to collect different trace data and logs it.
 
-## Goals
-The main (current) goal of the project is:
- - gain knowledge about Linux OS, its kernel and eBPF programs;
+# Goal
+The main goal of this project was to get familiar with eBPF and Aya-rs and get my hands it.
 
 ## Build and Run
 ### Prerequisites
@@ -19,11 +18,8 @@ RUSTFLAGS='-C linker=bpf-linker -C link-arg=--btf --cfg bpf_target_arch="x86_64"
 ```
 
 ### Run
-(Current approach) CD into `tracing` folder and **run** the program with:
+CD into `tracing` folder and **run** the program with:
 
 ```shell
 RUST_LOG=info cargo run --release --config 'target."cfg(all())".runner="sudo -E"'
 ```
-
-## Misc
-Any help/criticism is appreciated.
