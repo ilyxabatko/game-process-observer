@@ -26,4 +26,4 @@ RUST_LOG=info cargo run --release --config 'target."cfg(all())".runner="sudo -E"
 ```
 
 ## Misc
-The project is under development. Any help/criticism is appreciated.
+Any help/criticism is appreciated.
